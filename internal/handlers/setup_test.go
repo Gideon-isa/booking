@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"testing"
 	"time"
 
 	"github.com/Gideon-isa/booking/internal/config"
@@ -24,7 +25,7 @@ var session *scs.SessionManager
 var pathToTemplates = "./../../templates"
 var functions = template.FuncMap{}
 
-func getRoutes() http.Handler {
+func TestMain(m *testing.M) {
 	// What am I doing to put in the session
 	gob.Register(models.Reservation{})
 
@@ -44,6 +45,13 @@ func getRoutes() http.Handler {
 	session.Cookie.Secure = app.InProduction
 
 	app.Session = session
+
+	mailChan := make(chan models.MailData)
+	app.MailChan = mailChan
+	defer close(mailChan)
+
+	listenForMail()
+
 	tc, err := CreateTestTemplateCache()
 	if err != nil {
 		fmt.Println(err)
@@ -56,8 +64,21 @@ func getRoutes() http.Handler {
 
 	render.NewRenderer(&app)
 
-	repo := NewRepo(&app)
+	repo := NewTestRepo(&app)
 	NewHandlers(repo)
+
+	os.Exit(m.Run())
+}
+
+func listenForMail() {
+	go func() {
+		for {
+			_ = <-app.MailChan
+		}
+	}()
+}
+
+func getRoutes() http.Handler {
 
 	mux := chi.NewRouter()
 
