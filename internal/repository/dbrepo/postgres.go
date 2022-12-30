@@ -3,6 +3,7 @@ package dbrepo
 import (
 	"context"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/Gideon-isa/booking/internal/models"
@@ -15,7 +16,7 @@ func (m *postgresDBRepo) AllUsers() bool {
 
 // InsertReservation inserts a reservation into the database
 func (m *postgresDBRepo) InsertReservation(res models.Reservation) (int, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	var newID int
@@ -44,7 +45,7 @@ func (m *postgresDBRepo) InsertReservation(res models.Reservation) (int, error) 
 
 // InSertRoomRestriction inserts a room restriction into the database
 func (m *postgresDBRepo) InsertRoomRestriction(r models.RoomRestriction) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	stmt := `INSERT INTO room_restrictions (start_date, end_date, room_id, reservation_id,
@@ -69,7 +70,7 @@ func (m *postgresDBRepo) InsertRoomRestriction(r models.RoomRestriction) error {
 
 // SearchAvailabilityByDatesByRoomID returns true if availability exits, and false if no availability exist
 func (m *postgresDBRepo) SearchAvailabilityByDatesByRoomID(start, end time.Time, roomID int) (bool, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	var numRows int
 
@@ -94,7 +95,7 @@ func (m *postgresDBRepo) SearchAvailabilityByDatesByRoomID(start, end time.Time,
 
 // SearchAvailabilityForAllRooms returns a slice of available rooms, if any, for given date range
 func (m *postgresDBRepo) SearchAvailabilityForAllRooms(start, end time.Time) ([]models.Room, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	var rooms []models.Room
@@ -132,7 +133,7 @@ func (m *postgresDBRepo) SearchAvailabilityForAllRooms(start, end time.Time) ([]
 
 // GetRoomByID gets a room by id
 func (m *postgresDBRepo) GetRoomByID(id int) (models.Room, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	var room models.Room
@@ -518,4 +519,37 @@ func (m *postgresDBRepo) GetRestrictionForRoomByDate(roomID int, start, end time
 	}
 
 	return restrictions, nil
+}
+
+// InsertBlockForRoom inserts a room restriction
+func (m *postgresDBRepo) InsertBlockForRoom(id int, startDate time.Time) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `INSERT INTO room_restrictions (start_date, end_date, room_id, restriction_id,
+		created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6)`
+
+	_, err := m.DB.ExecContext(ctx, query, startDate, startDate.AddDate(0, 0, 1), id, 2, time.Now, time.Now)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return nil
+}
+
+// InsertBlockForRoom inserts a room restriction
+func (m *postgresDBRepo) DeleteBlockByID(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `DELETE FROM room_restrictions WHERE id = $1`
+
+	_, err := m.DB.ExecContext(ctx, query, id)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return nil
 }

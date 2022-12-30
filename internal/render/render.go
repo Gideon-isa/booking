@@ -17,7 +17,7 @@ import (
 
 var functions = template.FuncMap{
 	"humanDate":  HumanDate,
-	"formatDate": FormatData,
+	"formatDate": FormatDate,
 	"iterate":    Iterate,
 	"add":        Add,
 }
@@ -35,7 +35,7 @@ func HumanDate(t time.Time) string {
 	return t.Format("02-01-2006")
 }
 
-func FormatData(t time.Time, f string) string {
+func FormatDate(t time.Time, f string) string {
 	return t.Format(f)
 }
 
