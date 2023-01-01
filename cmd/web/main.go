@@ -15,6 +15,7 @@ import (
 	"github.com/Gideon-isa/booking/internal/models"
 	"github.com/Gideon-isa/booking/internal/render"
 	"github.com/alexedwards/scs/v2"
+	"github.com/joho/godotenv"
 )
 
 const portNumber string = ":8080"
@@ -81,8 +82,18 @@ func run() (*driver.DB, error) {
 	app.Session = session
 
 	// connect to databse
+	//Loading the env variable using the /joho/godotenv library
+	godotenv.Load("app.env")
+
+	host := os.Getenv("HOST")
+	port := os.Getenv("PORT")
+	user := os.Getenv("USER")
+	DBName := os.Getenv("NAME")
+	password := os.Getenv("PASSWORD")
+
 	log.Println("Connecting to database...")
-	db, err := driver.ConnectSQL("host=localhost port=5432 dbname=booking user=postgres password=iRavenous10#")
+	dsn := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s", host, port, DBName, user, password)
+	db, err := driver.ConnectSQL(dsn)
 	if err != nil {
 		log.Fatal("Cannot connect to database! Dying...")
 	}
