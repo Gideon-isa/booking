@@ -83,7 +83,10 @@ func run() (*driver.DB, error) {
 
 	// connect to databse
 	//Loading the env variable using the /joho/godotenv library
-	godotenv.Load("app.env")
+	err := godotenv.Load("app.env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 
 	host := os.Getenv("HOST")
 	port := os.Getenv("PORT")
